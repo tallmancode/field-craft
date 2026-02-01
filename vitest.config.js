@@ -16,9 +16,14 @@ export default defineConfig(() => {
         ignoreConfigErrors: true,
       }),
     ],
+    resolve: {
+      alias: {
+        '@payload-config': path.resolve(dirname, 'dev/payload.config.ts'),
+      },
+    },
     test: {
       environment: 'node',
-      include: ['dev/int.spec.ts'],
+      include: ['dev/int.spec.ts', 'src/**/*.spec.ts'],
       hookTimeout: 90_000,
       testTimeout: 30_000,
     },

@@ -49,4 +49,10 @@ describe('FieldCraft plugin integration tests', () => {
     )
     expect(hasAiSuggestionsField).toBe(true)
   })
+
+  test('plugin registers ai-suggestions and ai-seo-generate endpoint paths', async () => {
+    const paths = (config.endpoints ?? []).map((e: { path?: string }) => e.path)
+    expect(paths.some((p) => p?.includes('ai-suggestions'))).toBe(true)
+    expect(paths.some((p) => p?.includes('ai-seo-generate'))).toBe(true)
+  })
 })
