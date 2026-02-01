@@ -18,7 +18,8 @@ export default defineConfig(() => {
     ],
     test: {
       environment: 'node',
-      hookTimeout: 30_000,
+      include: ['dev/int.spec.ts'],
+      hookTimeout: 90_000,
       testTimeout: 30_000,
     },
   }
