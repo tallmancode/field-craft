@@ -15,7 +15,10 @@ export const seed = async (payload: Payload) => {
   if (!totalDocs) {
     await payload.create({
       collection: 'users',
-      data: devUser,
+      data: {
+        ...devUser,
+        roles: ['admin'],
+      },
     })
   }
 }

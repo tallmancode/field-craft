@@ -1,52 +1,52 @@
-import type { Payload } from 'payload'
+import type { Config, Payload } from 'payload'
 
-import config from '@payload-config'
-import { createPayloadRequest, getPayload } from 'payload'
+import configModule from '@payload-config'
+import { getPayload } from 'payload'
 import { afterAll, beforeAll, describe, expect, test } from 'vitest'
 
-import { customEndpointHandler } from '../src/endpoints/customEndpointHandler.js'
-
 let payload: Payload
+let config: Config
 
 afterAll(async () => {
-  await payload.destroy()
+  // Payload 3 may not expose destroy - process exit cleans up
 })
 
 beforeAll(async () => {
+  config = await configModule
   payload = await getPayload({ config })
 })
 
-describe('Plugin integration tests', () => {
-  test('should query custom endpoint added by plugin', async () => {
-    const request = new Request('http://localhost:3000/api/my-plugin-endpoint', {
-      method: 'GET',
-    })
-
-    const payloadRequest = await createPayloadRequest({ config, request })
-    const response = await customEndpointHandler(payloadRequest)
-    expect(response.status).toBe(200)
-
-    const data = await response.json()
-    expect(data).toMatchObject({
-      message: 'Hello from custom endpoint',
-    })
+describe('FieldCraft plugin integration tests', () => {
+  test('plugin adds ai-models and ai-usage-logs collections', async () => {
+    expect(payload.collections['ai-models']).toBeDefined()
+    expect(payload.collections['ai-usage-logs']).toBeDefined()
   })
 
-  test('can create post with custom text field added by plugin', async () => {
-    const post = await payload.create({
-      collection: 'posts',
-      data: {
-        addedByPlugin: 'added by plugin',
-      },
-    })
-    expect(post.addedByPlugin).toBe('added by plugin')
+  test('plugin adds ai-provider-settings global', async () => {
+    const globals = config.globals ?? []
+    const hasProviderSettings = globals.some(
+      (g: { slug?: string }) => g.slug === 'ai-provider-settings',
+    )
+    expect(hasProviderSettings).toBe(true)
   })
 
-  test('plugin creates and seeds plugin-collection', async () => {
-    expect(payload.collections['plugin-collection']).toBeDefined()
+  test('posts collection has aiSeoGenerate field from SEO feature', async () => {
+    const postsCollection = config.collections?.find(
+      (c: { slug?: string }) => c.slug === 'posts',
+    )
+    const hasAiSeoField = (postsCollection?.fields ?? []).some(
+      (f: { name?: string }) => f.name === 'aiSeoGenerate',
+    )
+    expect(hasAiSeoField).toBe(true)
+  })
 
-    const { docs } = await payload.find({ collection: 'plugin-collection' })
-
-    expect(docs).toHaveLength(1)
+  test('media collection has aiSuggestions field from media suggestions feature', async () => {
+    const mediaCollection = config.collections?.find(
+      (c: { slug?: string }) => c.slug === 'media',
+    )
+    const hasAiSuggestionsField = (mediaCollection?.fields ?? []).some(
+      (f: { name?: string }) => f.name === 'aiSuggestions',
+    )
+    expect(hasAiSuggestionsField).toBe(true)
   })
 })

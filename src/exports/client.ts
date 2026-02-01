@@ -1,1 +1,4 @@
-export { BeforeDashboardClient } from '../components/BeforeDashboardClient.js'
+/**
+ * Client component exports for manual use.
+ */
+export {}

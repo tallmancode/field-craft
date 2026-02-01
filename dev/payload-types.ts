@@ -6,25 +6,83 @@
  * and re-run `payload generate:types` to regenerate this file.
  */
 
+/**
+ * Supported timezones in IANA format.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "supportedTimezones".
+ */
+export type SupportedTimezones =
+  | 'Pacific/Midway'
+  | 'Pacific/Niue'
+  | 'Pacific/Honolulu'
+  | 'Pacific/Rarotonga'
+  | 'America/Anchorage'
+  | 'Pacific/Gambier'
+  | 'America/Los_Angeles'
+  | 'America/Tijuana'
+  | 'America/Denver'
+  | 'America/Phoenix'
+  | 'America/Chicago'
+  | 'America/Guatemala'
+  | 'America/New_York'
+  | 'America/Bogota'
+  | 'America/Caracas'
+  | 'America/Santiago'
+  | 'America/Buenos_Aires'
+  | 'America/Sao_Paulo'
+  | 'Atlantic/South_Georgia'
+  | 'Atlantic/Azores'
+  | 'Atlantic/Cape_Verde'
+  | 'Europe/London'
+  | 'Europe/Berlin'
+  | 'Africa/Lagos'
+  | 'Europe/Athens'
+  | 'Africa/Cairo'
+  | 'Europe/Moscow'
+  | 'Asia/Riyadh'
+  | 'Asia/Dubai'
+  | 'Asia/Baku'
+  | 'Asia/Karachi'
+  | 'Asia/Tashkent'
+  | 'Asia/Calcutta'
+  | 'Asia/Dhaka'
+  | 'Asia/Almaty'
+  | 'Asia/Jakarta'
+  | 'Asia/Bangkok'
+  | 'Asia/Shanghai'
+  | 'Asia/Singapore'
+  | 'Asia/Tokyo'
+  | 'Asia/Seoul'
+  | 'Australia/Brisbane'
+  | 'Australia/Sydney'
+  | 'Pacific/Guam'
+  | 'Pacific/Noumea'
+  | 'Pacific/Auckland'
+  | 'Pacific/Fiji';
+
 export interface Config {
   auth: {
     users: UserAuthOperations;
   };
+  blocks: {};
   collections: {
+    users: User;
     posts: Post;
     media: Media;
-    'plugin-collection': PluginCollection;
-    users: User;
+    'ai-models': AiModel;
+    'ai-usage-logs': AiUsageLog;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
     'payload-migrations': PayloadMigration;
   };
   collectionsJoins: {};
   collectionsSelect: {
+    users: UsersSelect<false> | UsersSelect<true>;
     posts: PostsSelect<false> | PostsSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
-    'plugin-collection': PluginCollectionSelect<false> | PluginCollectionSelect<true>;
-    users: UsersSelect<false> | UsersSelect<true>;
+    'ai-models': AiModelsSelect<false> | AiModelsSelect<true>;
+    'ai-usage-logs': AiUsageLogsSelect<false> | AiUsageLogsSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
     'payload-migrations': PayloadMigrationsSelect<false> | PayloadMigrationsSelect<true>;
@@ -32,8 +90,12 @@ export interface Config {
   db: {
     defaultIDType: string;
   };
-  globals: {};
-  globalsSelect: {};
+  globals: {
+    'ai-provider-settings': AiProviderSetting;
+  };
+  globalsSelect: {
+    'ai-provider-settings': AiProviderSettingsSelect<false> | AiProviderSettingsSelect<true>;
+  };
   locale: null;
   user: User & {
     collection: 'users';
@@ -63,11 +125,34 @@ export interface UserAuthOperations {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "users".
+ */
+export interface User {
+  id: string;
+  roles?: ('admin' | 'user')[] | null;
+  updatedAt: string;
+  createdAt: string;
+  email: string;
+  resetPasswordToken?: string | null;
+  resetPasswordExpiration?: string | null;
+  salt?: string | null;
+  hash?: string | null;
+  loginAttempts?: number | null;
+  lockUntil?: string | null;
+  password?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "posts".
  */
 export interface Post {
   id: string;
-  addedByPlugin?: string | null;
+  title: string;
+  excerpt?: string | null;
+  meta?: {
+    title?: string | null;
+    description?: string | null;
+  };
   updatedAt: string;
   createdAt: string;
 }
@@ -91,29 +176,40 @@ export interface Media {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "plugin-collection".
+ * via the `definition` "ai-models".
  */
-export interface PluginCollection {
+export interface AiModel {
   id: string;
+  provider: 'ollama' | 'ollama-cloud' | 'google-gemini' | 'claude-api';
+  /**
+   * API identifier (e.g. llava:latest, models/gemini-2.5-flash)
+   */
+  modelId: string;
+  /**
+   * Human-readable label for the dropdown
+   */
+  displayName?: string | null;
   updatedAt: string;
   createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "users".
+ * via the `definition` "ai-usage-logs".
  */
-export interface User {
+export interface AiUsageLog {
   id: string;
+  /**
+   * AI provider (e.g. google-gemini)
+   */
+  provider: string;
+  /**
+   * Model identifier used for the request
+   */
+  model: string;
+  inputTokens: number;
+  outputTokens: number;
   updatedAt: string;
   createdAt: string;
-  email: string;
-  resetPasswordToken?: string | null;
-  resetPasswordExpiration?: string | null;
-  salt?: string | null;
-  hash?: string | null;
-  loginAttempts?: number | null;
-  lockUntil?: string | null;
-  password?: string | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -123,6 +219,10 @@ export interface PayloadLockedDocument {
   id: string;
   document?:
     | ({
+        relationTo: 'users';
+        value: string | User;
+      } | null)
+    | ({
         relationTo: 'posts';
         value: string | Post;
       } | null)
@@ -131,12 +231,12 @@ export interface PayloadLockedDocument {
         value: string | Media;
       } | null)
     | ({
-        relationTo: 'plugin-collection';
-        value: string | PluginCollection;
+        relationTo: 'ai-models';
+        value: string | AiModel;
       } | null)
     | ({
-        relationTo: 'users';
-        value: string | User;
+        relationTo: 'ai-usage-logs';
+        value: string | AiUsageLog;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -182,10 +282,33 @@ export interface PayloadMigration {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "users_select".
+ */
+export interface UsersSelect<T extends boolean = true> {
+  roles?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  email?: T;
+  resetPasswordToken?: T;
+  resetPasswordExpiration?: T;
+  salt?: T;
+  hash?: T;
+  loginAttempts?: T;
+  lockUntil?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "posts_select".
  */
 export interface PostsSelect<T extends boolean = true> {
-  addedByPlugin?: T;
+  title?: T;
+  excerpt?: T;
+  meta?:
+    | T
+    | {
+        title?: T;
+        description?: T;
+      };
   updatedAt?: T;
   createdAt?: T;
 }
@@ -208,27 +331,26 @@ export interface MediaSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "plugin-collection_select".
+ * via the `definition` "ai-models_select".
  */
-export interface PluginCollectionSelect<T extends boolean = true> {
-  id?: T;
+export interface AiModelsSelect<T extends boolean = true> {
+  provider?: T;
+  modelId?: T;
+  displayName?: T;
   updatedAt?: T;
   createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "users_select".
+ * via the `definition` "ai-usage-logs_select".
  */
-export interface UsersSelect<T extends boolean = true> {
+export interface AiUsageLogsSelect<T extends boolean = true> {
+  provider?: T;
+  model?: T;
+  inputTokens?: T;
+  outputTokens?: T;
   updatedAt?: T;
   createdAt?: T;
-  email?: T;
-  resetPasswordToken?: T;
-  resetPasswordExpiration?: T;
-  salt?: T;
-  hash?: T;
-  loginAttempts?: T;
-  lockUntil?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -261,6 +383,51 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
   batch?: T;
   updatedAt?: T;
   createdAt?: T;
+}
+/**
+ * Configure AI provider settings for media suggestions and SEO generation
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ai-provider-settings".
+ */
+export interface AiProviderSetting {
+  id: string;
+  /**
+   * Select the AI provider for media suggestions and SEO generation
+   */
+  provider: 'ollama' | 'ollama-cloud' | 'google-gemini' | 'claude-api';
+  /**
+   * Select from cached models. Use 'Refetch models' if the list is empty or outdated.
+   */
+  model?: (string | null) | AiModel;
+  /**
+   * API endpoint URL - Ollama Local: http://localhost:11434 | Ollama Cloud: https://ollama.com (default)
+   */
+  apiUrl?: string | null;
+  /**
+   * API key - Optional for Ollama Local | Required for Ollama Cloud, Google Gemini, and Claude API (console.anthropic.com)
+   */
+  apiKey?: string | null;
+  /**
+   * Optional. Required for dashboard usage/cost widgets. Get from Claude Console Admin Keys (https://console.anthropic.com/settings/admin-keys). Uses env ANTHROPIC_ADMIN_API_KEY if not set.
+   */
+  adminApiKey?: string | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ai-provider-settings_select".
+ */
+export interface AiProviderSettingsSelect<T extends boolean = true> {
+  provider?: T;
+  model?: T;
+  apiUrl?: T;
+  apiKey?: T;
+  adminApiKey?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

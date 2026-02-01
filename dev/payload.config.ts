@@ -1,9 +1,9 @@
 import { mongooseAdapter } from '@payloadcms/db-mongodb'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
+import { fieldCraft } from 'field-craft'
 import { MongoMemoryReplSet } from 'mongodb-memory-server'
 import path from 'path'
 import { buildConfig } from 'payload'
-import { fieldCraft } from 'field-craft'
 import sharp from 'sharp'
 import { fileURLToPath } from 'url'
 
@@ -34,11 +34,44 @@ const buildConfigWithMemoryDB = async () => {
       importMap: {
         baseDir: path.resolve(dirname),
       },
+      user: 'users',
     },
     collections: [
       {
+        slug: 'users',
+        auth: true,
+        fields: [
+          {
+            name: 'roles',
+            type: 'select',
+            defaultValue: ['user'],
+            hasMany: true,
+            options: ['admin', 'user'],
+            saveToJWT: true,
+          },
+        ],
+      },
+      {
         slug: 'posts',
-        fields: [],
+        fields: [
+          {
+            name: 'title',
+            type: 'text',
+            required: true,
+          },
+          {
+            name: 'excerpt',
+            type: 'textarea',
+          },
+          {
+            name: 'meta',
+            type: 'group',
+            fields: [
+              { name: 'title', type: 'text' },
+              { name: 'description', type: 'textarea' },
+            ],
+          },
+        ],
       },
       {
         slug: 'media',
@@ -59,8 +92,22 @@ const buildConfigWithMemoryDB = async () => {
     },
     plugins: [
       fieldCraft({
-        collections: {
-          posts: true,
+        mediaSuggestions: {
+          collections: ['media'],
+          enabled: true,
+        },
+        seo: {
+          collections: [
+            {
+              slug: 'posts',
+              descriptionPath: 'meta.description',
+              titlePath: 'meta.title',
+            },
+          ],
+          contentPaths: {
+            posts: [],
+          },
+          enabled: true,
         },
       }),
     ],

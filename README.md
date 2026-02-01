@@ -6,8 +6,7 @@ A Payload CMS plugin that adds AI-powered **media suggestions** (title, alt text
 
 - **Media Suggestions** – Generate title, alt text, and credits for images using vision models. Applies to upload collections.
 - **SEO Generation** – Generate meta title and description from document content. Works with Lexical and block-based content.
-- **Shared Provider Config** – One AI Provider Settings global for all features. Supports Ollama, Ollama Cloud, Google Gemini, and Claude.
-- **Usage Dashboard** – Claude and Gemini usage widgets on the admin dashboard (when configured).
+- **Two provider modes** – Use the AI Provider Settings global (admin UI) or configure providers via plugin config (server-side).
 - **Configurable** – Choose which fields to populate, map to your schema, and customize content extraction.
 
 ## Installation
@@ -55,6 +54,36 @@ export default buildConfig({
 
 Then configure your AI provider in **Settings → AI Provider Settings**.
 
+Alternatively, use **config mode** to bypass the Settings global and pass provider config directly (see below).
+
+---
+
+## Provider Configuration Modes
+
+### 1. Settings Global Mode (default)
+
+Use the AI Provider Settings global in the admin. Users configure provider, model, and API keys via **Settings → AI Provider Settings**. Best for projects where admins need to change providers without code deploys.
+
+### 2. Config Mode
+
+Disable the global and pass provider config in the plugin options. Best for server-side/config-driven setups (e.g. env vars, deployment config).
+
+```ts
+fieldCraft({
+  providerSettings: { enabled: false },
+  providerConfig: {
+    provider: 'ollama',
+    model: 'llava:latest',
+    apiUrl: process.env.OLLAMA_API_URL || 'http://localhost:11434',
+    apiKey: process.env.OLLAMA_API_KEY,
+  },
+  mediaSuggestions: { collections: ['media'] },
+  seo: { collections: [...] },
+})
+```
+
+When `providerSettings.enabled` is `false`, `providerConfig` is **required**. The global, ai-models collection, and related endpoints (list models, refetch, test provider, usage) are not registered.
+
 ---
 
 ## Configuration Reference
@@ -66,7 +95,9 @@ Then configure your AI provider in **Settings → AI Provider Settings**.
 | `disabled` | `boolean` | `false` | Disable the entire plugin |
 | `mediaSuggestions` | `MediaSuggestionsConfig` | `{}` | Media suggestions feature config |
 | `seo` | `SEOConfig` | `{}` | SEO generation feature config |
-| `providerSettingsSlug` | `string` | `'ai-provider-settings'` | Slug for the shared AI settings global |
+| `providerSettings` | `{ enabled?: boolean }` | `{ enabled: true }` | When `enabled: false`, use config mode |
+| `providerConfig` | `ProviderConfigInput` | – | Required when `providerSettings.enabled` is false |
+| `providerSettingsSlug` | `string` | `'ai-provider-settings'` | Slug for the AI settings global (ignored in config mode) |
 | `brandVoice` | `string` | – | Override default brand voice instruction for AI prompts |
 | `componentBasePath` | `string` | `'field-craft/components'` | Base path for resolving admin components |
 
@@ -149,9 +180,9 @@ seo: {
 
 ## Setup and Usage
 
-### 1. AI Provider Settings
+### 1. AI Provider Settings (Settings Global Mode)
 
-After installing, go to **Settings → AI Provider Settings** and configure:
+When using the default Settings global mode, go to **Settings → AI Provider Settings** and configure:
 
 - **Provider** – Ollama (local), Ollama Cloud, Google Gemini, or Claude API
 - **Model** – Use "Refetch models" to load available models, then select one
@@ -165,7 +196,7 @@ After installing, go to **Settings → AI Provider Settings** and configure:
 | `OLLAMA_API_URL` | Default: `http://localhost:11434` |
 | `OLLAMA_MODEL` | Default: `llava:latest` |
 | `OLLAMA_API_KEY` | For Ollama Cloud |
-| `ANTHROPIC_ADMIN_API_KEY` | For Claude usage dashboard widget |
+| `ANTHROPIC_ADMIN_API_KEY` | For Claude admin API features |
 
 ### 2. Media Suggestions (Upload Collections)
 
@@ -205,7 +236,9 @@ An empty array `[]` means only `title` and `excerpt` (if present) are used.
 
 ---
 
-## Complete Example
+## Complete Examples
+
+### Settings Global Mode (default)
 
 ```ts
 import { buildConfig } from 'payload'
@@ -276,6 +309,26 @@ export default buildConfig({
     }),
   ],
   // ...
+})
+```
+
+### Config Mode (no Settings global)
+
+```ts
+fieldCraft({
+  providerSettings: { enabled: false },
+  providerConfig: {
+    provider: 'google-gemini',
+    model: 'models/gemini-2.5-flash',
+    apiKey: process.env.GOOGLE_AI_API_KEY,
+  },
+  mediaSuggestions: { collections: ['media'] },
+  seo: {
+    collections: [
+      { slug: 'pages', titlePath: 'meta.title', descriptionPath: 'meta.description' },
+    ],
+    contentPaths: { pages: ['content', 'section'] },
+  },
 })
 ```
 

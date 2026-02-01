@@ -1,7 +1,7 @@
 {
   "name": "field-craft",
   "version": "1.0.0",
-  "description": "A blank template to get started with Payload 3.0",
+  "description": "Payload CMS plugin: AI media suggestions and AI SEO generation",
   "license": "MIT",
   "type": "module",
   "exports": {
@@ -19,7 +19,9 @@
       "import": "./src/exports/rsc.ts",
       "types": "./src/exports/rsc.ts",
       "default": "./src/exports/rsc.ts"
-    }
+    },
+    "./components/*": "./src/components/*",
+    "./components/dashboard/*": "./src/components/dashboard/*"
   },
   "main": "./src/index.ts",
   "types": "./src/index.ts",
@@ -115,5 +117,9 @@
     ]
   },
   "registry": "https://registry.npmjs.org/",
-  "dependencies": {}
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.32.1",
+    "@google/generative-ai": "^0.24.1",
+    "ollama": "^0.6.3"
+  }
 }
