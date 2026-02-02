@@ -38,9 +38,15 @@ export default defineConfig({
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
   },
-  webServer: {
-    command: 'pnpm dev',
-    reuseExistingServer: true,
-    url: 'http://localhost:3000/admin',
-  },
+  /* In CI the workflow starts the dev server; locally Playwright starts it. */
+  ...(process.env.E2E_SERVER_READY
+    ? {}
+    : {
+        webServer: {
+          command: 'pnpm dev',
+          reuseExistingServer: true,
+          url: 'http://localhost:3000/admin',
+          timeout: process.env.CI ? 300_000 : 120_000,
+        },
+      }),
 })
