@@ -15,6 +15,9 @@ const nextConfig = {
 
     return webpackConfig
   },
+  turbopack: {
+    resolveExtensions: ['.tsx', '.ts', '.jsx', '.js', '.mts', '.mjs', '.cts', '.cjs', '.json'],
+  },
   serverExternalPackages: ['mongodb-memory-server'],
 }
 

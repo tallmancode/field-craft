@@ -114,21 +114,6 @@ export function createAIProviderSettings(
         },
       },
       {
-        name: 'adminApiKey',
-        type: 'text',
-        admin: {
-          components: {
-            Field: {
-              exportName: 'RedactedApiKeyField',
-              path: `${componentBasePath}/RedactedApiKeyField`,
-            },
-          },
-          condition: (data) => data.provider === 'claude-api',
-          description:
-            'Optional. Required for dashboard usage/cost widgets. Get from Claude Console Admin Keys (https://console.anthropic.com/settings/admin-keys). Uses env ANTHROPIC_ADMIN_API_KEY if not set.',
-        },
-      },
-      {
         name: 'testProvider',
         type: 'ui',
         admin: {
@@ -173,12 +158,6 @@ export function createAIProviderSettings(
           if (originalDoc) {
             if ((data?.apiKey === undefined || data?.apiKey === '') && originalDoc.apiKey) {
               data.apiKey = originalDoc.apiKey
-            }
-            if (
-              (data?.adminApiKey === undefined || data?.adminApiKey === '') &&
-              originalDoc.adminApiKey
-            ) {
-              data.adminApiKey = originalDoc.adminApiKey
             }
           }
           return data

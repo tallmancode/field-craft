@@ -117,11 +117,6 @@ export const fieldCraft = (pluginOptions: FieldCraftConfig = {}): Plugin => {
     const resolvedMediaConfig: ResolvedMediaSuggestionsConfig = {
       collections: mediaOpts.collections ?? [],
       endpointPath: mediaEndpointPath,
-      fieldMappings: {
-        alt: mediaOpts.fieldMappings?.alt ?? 'alt',
-        credits: mediaOpts.fieldMappings?.credits ?? 'creditText',
-        title: mediaOpts.fieldMappings?.title ?? 'title',
-      },
       ollamaConfig: {
         apiKey: mediaOpts.ollamaConfig?.apiKey ?? process.env.OLLAMA_API_KEY,
         apiUrl:
@@ -133,10 +128,7 @@ export const fieldCraft = (pluginOptions: FieldCraftConfig = {}): Plugin => {
           process.env.OLLAMA_MODEL ??
           'llava:latest',
       },
-      populateFields:
-        mediaOpts.populateFields && mediaOpts.populateFields.length > 0
-          ? mediaOpts.populateFields
-          : ['title', 'alt', 'credits'],
+      populateFields: mediaOpts.populateFields ?? [],
       providerConfig: resolvedProviderConfig,
       providerSettingsSlug,
       sidebarPosition: mediaOpts.sidebarPosition !== false,
@@ -183,7 +175,6 @@ export const fieldCraft = (pluginOptions: FieldCraftConfig = {}): Plugin => {
                   Field: {
                     clientProps: {
                       endpointPath: mediaEndpointPath,
-                      fieldMappings: resolvedMediaConfig.fieldMappings,
                       populateFields: resolvedMediaConfig.populateFields,
                     },
                     exportName: 'AISuggestionsField',
@@ -194,7 +185,14 @@ export const fieldCraft = (pluginOptions: FieldCraftConfig = {}): Plugin => {
                   ? ('sidebar' as const)
                   : undefined,
               },
-            },
+              // Stored on field so it survives createClientField (admin.components is stripped)
+              ...({
+                aiSuggestionsConfig: {
+                  endpointPath: mediaEndpointPath,
+                  populateFields: resolvedMediaConfig.populateFields,
+                },
+              } as Record<string, unknown>),
+            } as import('payload').Field,
           ],
         }
       }
@@ -304,8 +302,9 @@ export const fieldCraft = (pluginOptions: FieldCraftConfig = {}): Plugin => {
 
 export type {
   FieldCraftConfig,
-  MediaSuggestionField,
   MediaSuggestions,
+  MediaSuggestionType,
+  PopulateFieldConfig,
   ProviderConfig,
   ProviderConfigInput,
 } from './types.js'

@@ -9,6 +9,7 @@ import { fileURLToPath } from 'url'
 
 import { testEmailAdapter } from './helpers/testEmailAdapter.js'
 import { seed } from './seed.js'
+import { seoPlugin } from '@payloadcms/plugin-seo'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -66,19 +67,14 @@ const buildConfigWithMemoryDB = async () => {
             name: 'excerpt',
             type: 'textarea',
           },
-          {
-            name: 'meta',
-            type: 'group',
-            fields: [
-              { name: 'title', type: 'text' },
-              { name: 'description', type: 'textarea' },
-            ],
-          },
         ],
       },
       {
         slug: 'media',
-        fields: [],
+        fields: [
+          { name: 'title', type: 'text' },
+          { name: 'alt', type: 'text' },
+        ],
         upload: {
           staticDir: path.resolve(dirname, 'media'),
         },
@@ -94,10 +90,22 @@ const buildConfigWithMemoryDB = async () => {
       await seed(payload)
     },
     plugins: [
+      seoPlugin({
+        collections: [
+          'posts',
+        ],
+        generateDescription: ({ doc }) => doc.excerpt,
+        generateTitle: ({ doc }) => `Website.com — ${doc.title}`,
+        uploadsCollection: 'media'
+      }),
       fieldCraft({
         mediaSuggestions: {
           collections: ['media'],
           enabled: true,
+          populateFields: [
+            { fieldType: 'text', path: 'title' },
+            { fieldType: 'text', path: 'alt' },
+          ],
         },
         seo: {
           collections: [
