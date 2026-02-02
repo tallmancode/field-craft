@@ -28,5 +28,27 @@ jobs:
       - name: Install Playwright browsers
         run: pnpm exec playwright install --with-deps
 
+      - name: Start dev server
+        run: |
+          pnpm dev &
+          echo $! > .dev-server.pid
+          for i in $(seq 1 90); do
+            if curl -sf http://localhost:3000/admin > /dev/null 2>&1; then
+              echo "Server ready"
+              break
+            fi
+            if ! kill -0 $(cat .dev-server.pid) 2>/dev/null; then
+              echo "Server process exited early"
+              exit 1
+            fi
+            echo "Waiting for server... ($i/90)"
+            sleep 2
+          done
+        env:
+          NODE_ENV: test
+          CI: true
+
       - name: Run tests
         run: pnpm test
+        env:
+          E2E_SERVER_READY: 1
