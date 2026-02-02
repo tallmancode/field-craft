@@ -85,11 +85,19 @@ export interface MediaSuggestions {
   title: string
 }
 
+/** Payload field types that media suggestions can populate */
+export type MediaSuggestionType = 'text' | 'textarea'
+
 /**
- * Which suggestion types to populate into media fields.
- * Omit or use all three to populate everything.
+ * Configures a text or textarea field to populate with AI suggestions.
+ * AI outputs (title, alt, credits) are mapped by position: 1st path → title, 2nd → alt, 3rd → credits.
  */
-export type MediaSuggestionField = 'alt' | 'credits' | 'title'
+export interface PopulateFieldConfig {
+  /** Field path to populate (e.g. 'alt', 'meta.title', 'caption') */
+  path: string
+  /** Target field type. Default: 'text' */
+  fieldType?: MediaSuggestionType
+}
 
 /**
  * Media suggestions plugin sub-config
@@ -98,21 +106,17 @@ export interface MediaSuggestionsConfig {
   collections?: string[]
   enabled?: boolean
   endpointPath?: string
-  fieldMappings?: {
-    alt?: string
-    credits?: string
-    title?: string
-  }
   ollamaConfig?: {
     apiKey?: string
     apiUrl?: string
     model?: string
   }
   /**
-   * Which suggestion types to populate. Default: ['title', 'alt', 'credits'].
-   * Use a subset to only populate specific fields (e.g. ['alt'] for accessibility only).
+   * Fields to populate with AI suggestions. Required for the feature to be active.
+   * Each entry maps an AI output type to any text/textarea field path.
+   * Omit or pass [] to show the panel with the button disabled and a config notice.
    */
-  populateFields?: MediaSuggestionField[]
+  populateFields?: PopulateFieldConfig[]
   sidebarPosition?: boolean
 }
 
@@ -166,9 +170,8 @@ export interface FieldCraftConfig {
 export interface ResolvedMediaSuggestionsConfig {
   collections: string[]
   endpointPath: string
-  fieldMappings: { alt: string; credits: string; title: string }
   ollamaConfig: { apiKey?: string; apiUrl: string; model: string }
-  populateFields: MediaSuggestionField[]
+  populateFields: PopulateFieldConfig[]
   /** When set, endpoints use this instead of the global. Used in config mode. */
   providerConfig: ProviderConfig | null
   providerSettingsSlug: string

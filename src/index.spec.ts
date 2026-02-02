@@ -36,7 +36,15 @@ describe('fieldCraft plugin', () => {
   test('default / happy path: adds ai-models and ai-usage-logs collections', () => {
     const config = mockConfig()
     const plugin = fieldCraft({
-      mediaSuggestions: { enabled: true, collections: ['media'] },
+      mediaSuggestions: {
+        enabled: true,
+        collections: ['media'],
+        populateFields: [
+          { path: 'title', fieldType: 'text' },
+          { path: 'alt', fieldType: 'text' },
+          { path: 'credits', fieldType: 'text' },
+        ],
+      },
       seo: {
         enabled: true,
         collections: [{ slug: 'posts', titlePath: 'meta.title', descriptionPath: 'meta.description' }],
@@ -51,7 +59,15 @@ describe('fieldCraft plugin', () => {
   test('default / happy path: adds ai-provider-settings global', () => {
     const config = mockConfig()
     const plugin = fieldCraft({
-      mediaSuggestions: { enabled: true, collections: ['media'] },
+      mediaSuggestions: {
+        enabled: true,
+        collections: ['media'],
+        populateFields: [
+          { path: 'title', fieldType: 'text' },
+          { path: 'alt', fieldType: 'text' },
+          { path: 'credits', fieldType: 'text' },
+        ],
+      },
     })
     const result = plugin(config)
     const hasProviderSettings = result.globals?.some(
@@ -63,7 +79,15 @@ describe('fieldCraft plugin', () => {
   test('default / happy path: endpoints length increases', () => {
     const config = mockConfig()
     const plugin = fieldCraft({
-      mediaSuggestions: { enabled: true, collections: ['media'] },
+      mediaSuggestions: {
+        enabled: true,
+        collections: ['media'],
+        populateFields: [
+          { path: 'title', fieldType: 'text' },
+          { path: 'alt', fieldType: 'text' },
+          { path: 'credits', fieldType: 'text' },
+        ],
+      },
       seo: { enabled: true, collections: [{ slug: 'posts' }] },
     })
     const result = plugin(config)
@@ -73,7 +97,15 @@ describe('fieldCraft plugin', () => {
   test('default / happy path: media collection has aiSuggestions field', () => {
     const config = mockConfig()
     const plugin = fieldCraft({
-      mediaSuggestions: { enabled: true, collections: ['media'] },
+      mediaSuggestions: {
+        enabled: true,
+        collections: ['media'],
+        populateFields: [
+          { path: 'title', fieldType: 'text' },
+          { path: 'alt', fieldType: 'text' },
+          { path: 'credits', fieldType: 'text' },
+        ],
+      },
     })
     const result = plugin(config)
     const media = result.collections?.find((c) => c.slug === 'media')
@@ -86,7 +118,15 @@ describe('fieldCraft plugin', () => {
   test('default / happy path: seo collection has aiSeoGenerate field', () => {
     const config = mockConfig()
     const plugin = fieldCraft({
-      mediaSuggestions: { enabled: true, collections: ['media'] },
+      mediaSuggestions: {
+        enabled: true,
+        collections: ['media'],
+        populateFields: [
+          { path: 'title', fieldType: 'text' },
+          { path: 'alt', fieldType: 'text' },
+          { path: 'credits', fieldType: 'text' },
+        ],
+      },
       seo: {
         enabled: true,
         collections: [{ slug: 'posts', titlePath: 'meta.title', descriptionPath: 'meta.description' }],
@@ -104,7 +144,15 @@ describe('fieldCraft plugin', () => {
     const config = mockConfig()
     const plugin = fieldCraft({
       disabled: true,
-      mediaSuggestions: { enabled: true, collections: ['media'] },
+      mediaSuggestions: {
+        enabled: true,
+        collections: ['media'],
+        populateFields: [
+          { path: 'title', fieldType: 'text' },
+          { path: 'alt', fieldType: 'text' },
+          { path: 'credits', fieldType: 'text' },
+        ],
+      },
       seo: { enabled: true, collections: [{ slug: 'posts' }] },
     })
     const result = plugin(config)
@@ -124,7 +172,15 @@ describe('fieldCraft plugin', () => {
   test('providerSettings.enabled false without providerConfig throws', () => {
     const config = mockConfig()
     const plugin = fieldCraft({
-      mediaSuggestions: { enabled: true, collections: ['media'] },
+      mediaSuggestions: {
+        enabled: true,
+        collections: ['media'],
+        populateFields: [
+          { path: 'title', fieldType: 'text' },
+          { path: 'alt', fieldType: 'text' },
+          { path: 'credits', fieldType: 'text' },
+        ],
+      },
       providerSettings: { enabled: false },
     })
     expect(() => plugin(config)).toThrow(/providerConfig is required/)
@@ -133,7 +189,15 @@ describe('fieldCraft plugin', () => {
   test('providerSettings.enabled false with providerConfig: no global, no list/refetch/test endpoints', () => {
     const config = mockConfig()
     const plugin = fieldCraft({
-      mediaSuggestions: { enabled: true, collections: ['media'] },
+      mediaSuggestions: {
+        enabled: true,
+        collections: ['media'],
+        populateFields: [
+          { path: 'title', fieldType: 'text' },
+          { path: 'alt', fieldType: 'text' },
+          { path: 'credits', fieldType: 'text' },
+        ],
+      },
       providerSettings: { enabled: false },
       providerConfig: { provider: 'ollama', model: 'llava:latest' },
     })
@@ -151,7 +215,15 @@ describe('fieldCraft plugin', () => {
   test('providerSettings.enabled false with providerConfig: media/SEO fields still added', () => {
     const config = mockConfig()
     const plugin = fieldCraft({
-      mediaSuggestions: { enabled: true, collections: ['media'] },
+      mediaSuggestions: {
+        enabled: true,
+        collections: ['media'],
+        populateFields: [
+          { path: 'title', fieldType: 'text' },
+          { path: 'alt', fieldType: 'text' },
+          { path: 'credits', fieldType: 'text' },
+        ],
+      },
       seo: { enabled: true, collections: [{ slug: 'posts' }] },
       providerSettings: { enabled: false },
       providerConfig: { provider: 'ollama', model: 'llava:latest' },
@@ -177,7 +249,15 @@ describe('fieldCraft plugin', () => {
       ],
     })
     const plugin = fieldCraft({
-      mediaSuggestions: { enabled: true, collections: ['media'] },
+      mediaSuggestions: {
+        enabled: true,
+        collections: ['media'],
+        populateFields: [
+          { path: 'title', fieldType: 'text' },
+          { path: 'alt', fieldType: 'text' },
+          { path: 'credits', fieldType: 'text' },
+        ],
+      },
     })
     const result = plugin(config)
     const media = result.collections?.find((c) => c.slug === 'media')
@@ -195,7 +275,15 @@ describe('fieldCraft plugin', () => {
       ],
     })
     const plugin = fieldCraft({
-      mediaSuggestions: { enabled: true, collections: ['media'] },
+      mediaSuggestions: {
+        enabled: true,
+        collections: ['media'],
+        populateFields: [
+          { path: 'title', fieldType: 'text' },
+          { path: 'alt', fieldType: 'text' },
+          { path: 'credits', fieldType: 'text' },
+        ],
+      },
       seo: {
         enabled: true,
         collections: [{ slug: 'posts' }],

@@ -5,27 +5,28 @@ import type { UIFieldClientComponent } from 'payload'
 import { Button, useDocumentInfo, useForm , useFormFields } from '@payloadcms/ui'
 import { useState } from 'react'
 
-type MediaSuggestionField = 'alt' | 'credits' | 'title'
+import type { PopulateFieldConfig } from '../types.js'
 
 interface AISuggestionsCustomProps {
   endpointPath?: string
-  fieldMappings?: { alt?: string; credits?: string; title?: string }
-  /** Which suggestion types to populate. Default: all. */
-  populateFields?: MediaSuggestionField[]
+  /** Fields to populate: maps AI suggestion types to text/textarea field paths */
+  populateFields?: PopulateFieldConfig[]
 }
 
 export const AISuggestionsField: UIFieldClientComponent = (props) => {
-  const customProps = (props as { customProps?: AISuggestionsCustomProps }).customProps ?? {}
-  const endpointPath = customProps.endpointPath || '/ai-suggestions'
-  const fieldMappings = customProps.fieldMappings || {
-    alt: 'alt',
-    credits: 'creditText',
-    title: 'title',
+  // Payload strips admin.components in createClientField, so we store config on field.aiSuggestionsConfig
+  const p = props as AISuggestionsCustomProps & {
+    customProps?: AISuggestionsCustomProps
+    field?: {
+      admin?: { components?: { Field?: { clientProps?: AISuggestionsCustomProps } } }
+      aiSuggestionsConfig?: { endpointPath?: string; populateFields?: PopulateFieldConfig[] }
+    }
   }
-  const populateFields =
-    customProps.populateFields && customProps.populateFields.length > 0
-      ? customProps.populateFields
-      : (['title', 'alt', 'credits'] as const)
+  const fromConfig = p.field?.aiSuggestionsConfig
+  const fromClientProps = p.customProps ?? p.field?.admin?.components?.Field?.clientProps ?? p
+  const endpointPath = fromConfig?.endpointPath ?? fromClientProps.endpointPath || '/ai-suggestions'
+  const populateFields = fromConfig?.populateFields ?? fromClientProps.populateFields ?? []
+  const hasFieldsConfigured = Array.isArray(populateFields) && populateFields.length > 0
 
   const { id } = useDocumentInfo()
   const { dispatchFields } = useForm()
@@ -107,26 +108,13 @@ export const AISuggestionsField: UIFieldClientComponent = (props) => {
       }
 
       if (data.success && data.suggestions) {
-        if (populateFields.includes('title') && fieldMappings?.title) {
-          dispatchFields({
-            type: 'UPDATE',
-            path: fieldMappings.title,
-            value: data.suggestions.title,
-          })
-        }
-        if (populateFields.includes('alt') && fieldMappings?.alt) {
-          dispatchFields({
-            type: 'UPDATE',
-            path: fieldMappings.alt,
-            value: data.suggestions.alt,
-          })
-        }
-        if (populateFields.includes('credits') && fieldMappings?.credits) {
-          dispatchFields({
-            type: 'UPDATE',
-            path: fieldMappings.credits,
-            value: data.suggestions.credits,
-          })
+        const outputs: (keyof typeof data.suggestions)[] = ['title', 'alt', 'credits']
+        for (let i = 0; i < populateFields.length && i < outputs.length; i++) {
+          const { path } = populateFields[i]
+          const value = data.suggestions[outputs[i]]
+          if (value != null) {
+            dispatchFields({ type: 'UPDATE', path, value })
+          }
         }
         setSuccess(true)
         setTimeout(() => setSuccess(false), 3000)
@@ -143,7 +131,7 @@ export const AISuggestionsField: UIFieldClientComponent = (props) => {
   }
 
   return (
-    <div style={{ borderTop: '1px solid var(--theme-elevation-200)', padding: 'var(--base)' }}>
+    <div style={{  padding: 'var(--base)' }}>
       <div style={{ marginBottom: 'var(--base)' }}>
         <h3 style={{ fontSize: 'var(--font-size-small)', margin: '0 0 var(--base) 0' }}>
           AI Suggestions
@@ -156,10 +144,28 @@ export const AISuggestionsField: UIFieldClientComponent = (props) => {
             opacity: 0.7,
           }}
         >
-          Generate AI-powered suggestions for Title, Alt text, and Credits based on the image
-          content.
+          Generate AI-powered suggestions based on the image content and populate the configured
+          text/textarea fields.
         </p>
       </div>
+
+      {!hasFieldsConfigured && (
+        <div
+          style={{
+            backgroundColor: 'var(--color-base-100)',
+            color: 'var(--theme-text)',
+            fontSize: 'var(--font-size-small)',
+            marginBottom: 'calc(var(--base) / 2)',
+            marginTop: 'var(--base)',
+            opacity: 0.6,
+            padding: 'var(--base)'
+          }}
+        >
+          Configure <code>populateFields</code> in your FieldCraft <code>mediaSuggestions</code>{' '}
+          config to enable AI suggestions. Add text/textarea field paths, e.g.{' '}
+          <code>{`[{ path: 'alt', fieldType: 'text' }]`}</code>
+        </div>
+      )}
 
       <div style={{ marginBottom: 'var(--base)' }}>
         <label
@@ -196,7 +202,7 @@ export const AISuggestionsField: UIFieldClientComponent = (props) => {
 
       <Button
         buttonStyle="secondary"
-        disabled={isLoading || !hasFile}
+        disabled={isLoading || !hasFile || !hasFieldsConfigured}
         onClick={handleGenerateSuggestions}
         size="small"
       >
@@ -233,7 +239,8 @@ export const AISuggestionsField: UIFieldClientComponent = (props) => {
         </div>
       )}
 
-      {!hasFile && (
+
+      {hasFieldsConfigured && !hasFile && (
         <div
           style={{
             color: 'var(--theme-text)',

@@ -35,6 +35,11 @@ export default buildConfig({
     fieldCraft({
       mediaSuggestions: {
         collections: ['media'],
+        populateFields: [
+          { path: 'title', fieldType: 'text' },
+          { path: 'alt', fieldType: 'text' },
+          { path: 'credits', fieldType: 'text' },
+        ],
       },
       seo: {
         collections: [
@@ -77,7 +82,14 @@ fieldCraft({
     apiUrl: process.env.OLLAMA_API_URL || 'http://localhost:11434',
     apiKey: process.env.OLLAMA_API_KEY,
   },
-  mediaSuggestions: { collections: ['media'] },
+  mediaSuggestions: {
+    collections: ['media'],
+    populateFields: [
+      { path: 'title', fieldType: 'text' },
+      { path: 'alt', fieldType: 'text' },
+      { path: 'credits', fieldType: 'text' },
+    ],
+  },
   seo: { collections: [...] },
 })
 ```
@@ -107,27 +119,30 @@ When `providerSettings.enabled` is `false`, `providerConfig` is **required**. Th
 |--------|------|---------|-------------|
 | `enabled` | `boolean` | `true` | Enable media suggestions |
 | `collections` | `string[]` | All upload collections | Collection slugs to add AI suggestions to |
-| `populateFields` | `('title' \| 'alt' \| 'credits')[]` | `['title','alt','credits']` | Which suggestion types to populate |
-| `fieldMappings` | `object` | See below | Map suggestion types to your field names |
+| `populateFields` | `PopulateFieldConfig[]` | `[]` | Text/textarea field paths to populate. AI outputs (title, alt, credits) map by position: 1st path → title, 2nd → alt, 3rd → credits. Required for the feature. |
 | `endpointPath` | `string` | `'/ai-suggestions'` | API path for the suggestions endpoint |
 | `sidebarPosition` | `boolean` | `true` | Show the field in the sidebar |
 | `ollamaConfig` | `object` | – | Fallback config when global settings aren't set |
 
-**Default field mappings:**
-```ts
-{
-  title: 'title',
-  alt: 'alt',
-  credits: 'creditText',
-}
-```
+**`PopulateFieldConfig`:** `{ path: string; fieldType?: 'text' | 'textarea' }` – `path` targets a text or textarea field. `fieldType` defaults to `'text'`.
 
-**Example – only populate alt for accessibility:**
+**Example – single text field (gets title output):**
 ```ts
 mediaSuggestions: {
   collections: ['media'],
-  populateFields: ['alt'],
-  fieldMappings: { alt: 'altText' },
+  populateFields: [{ path: 'caption', fieldType: 'text' }],
+}
+```
+
+**Example – map to custom field paths (order: title → alt → credits):**
+```ts
+mediaSuggestions: {
+  collections: ['media'],
+  populateFields: [
+    { path: 'meta.seoTitle', fieldType: 'text' },
+    { path: 'accessibility.description', fieldType: 'textarea' },
+    { path: 'caption', fieldType: 'text' },
+  ],
 }
 ```
 
@@ -206,7 +221,7 @@ When media suggestions are enabled, the **AI Suggestions** field appears on uplo
 2. Click **Generate AI Suggestions**.
 3. Title, alt text, and credits are filled from the AI response.
 
-You can restrict which fields are populated with `populateFields`, and map to different field names with `fieldMappings`.
+Configure which fields to populate with `populateFields` – each entry maps an AI suggestion type to any text/textarea field path.
 
 ### 3. SEO Generation (Content Collections)
 
@@ -286,12 +301,11 @@ export default buildConfig({
     fieldCraft({
       mediaSuggestions: {
         collections: ['media'],
-        populateFields: ['title', 'alt', 'credits'],
-        fieldMappings: {
-          title: 'title',
-          alt: 'alt',
-          credits: 'creditText',
-        },
+        populateFields: [
+          { path: 'title', fieldType: 'text' },
+          { path: 'alt', fieldType: 'text' },
+          { path: 'credits', fieldType: 'text' },
+        ],
       },
       seo: {
         collections: [
@@ -322,7 +336,14 @@ fieldCraft({
     model: 'models/gemini-2.5-flash',
     apiKey: process.env.GOOGLE_AI_API_KEY,
   },
-  mediaSuggestions: { collections: ['media'] },
+  mediaSuggestions: {
+    collections: ['media'],
+    populateFields: [
+      { path: 'title', fieldType: 'text' },
+      { path: 'alt', fieldType: 'text' },
+      { path: 'credits', fieldType: 'text' },
+    ],
+  },
   seo: {
     collections: [
       { slug: 'pages', titlePath: 'meta.title', descriptionPath: 'meta.description' },

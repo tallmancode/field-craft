@@ -3,7 +3,6 @@ import type { Endpoint, GlobalSlug, PayloadRequest } from 'payload'
 import type { ResolvedMediaSuggestionsConfig } from '../types.js'
 
 interface AiProviderSettingsDoc {
-  adminApiKey?: string
   apiKey?: string
   provider?: string
 }
@@ -82,7 +81,6 @@ export function createClaudeUsageEndpoint(config: ResolvedMediaSuggestionsConfig
         }
 
         const adminApiKey =
-          globalSettings?.adminApiKey?.trim() ||
           process.env.ANTHROPIC_ADMIN_API_KEY?.trim() ||
           (globalSettings?.apiKey?.trim()?.startsWith('sk-ant-admin') ? globalSettings.apiKey.trim() : undefined)
 
@@ -95,10 +93,10 @@ export function createClaudeUsageEndpoint(config: ResolvedMediaSuggestionsConfig
               'ANTHROPIC_ADMIN_API_KEY is set but the key may be invalid (must start with sk-ant-admin). Restart the server after changing .env.'
           } else if (hasRegularKey) {
             hint =
-              'The regular Claude API key cannot access usage data. Add ANTHROPIC_ADMIN_API_KEY to .env and restart, or add the Admin API Key in Settings → AI Provider Settings (get it from https://console.anthropic.com/settings/admin-keys).'
+              'The regular Claude API key cannot access usage data. Add ANTHROPIC_ADMIN_API_KEY to .env and restart (get it from https://console.anthropic.com/settings/admin-keys).'
           } else {
             hint =
-              'Add ANTHROPIC_ADMIN_API_KEY to .env and restart, or add the Admin API Key in Settings → AI Provider Settings. Get it from https://console.anthropic.com/settings/admin-keys'
+              'Add ANTHROPIC_ADMIN_API_KEY to .env and restart. Get it from https://console.anthropic.com/settings/admin-keys'
           }
           return Response.json(
             { error: 'Admin API key not configured', hint },
