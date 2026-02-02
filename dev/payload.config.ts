@@ -18,7 +18,10 @@ if (!process.env.ROOT_DIR) {
 }
 
 const buildConfigWithMemoryDB = async () => {
-  if (process.env.NODE_ENV === 'test') {
+  const useMemoryDB =
+    process.env.NODE_ENV === 'test' ||
+    (process.env.CI === 'true' && !process.env.DATABASE_URL)
+  if (useMemoryDB) {
     const memoryDB = await MongoMemoryReplSet.create({
       replSet: {
         count: 3,
